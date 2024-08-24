@@ -2,14 +2,15 @@ const socket = io();
 
 if (navigator.geolocation) {
     navigator.geolocation.watchPosition((position) => {
-        const { latitude, longitude } = position.coords;
+        const { latitude, longitude, accuracy } = position.coords;
+        console.log('Latitude:', latitude, 'Longitude:', longitude, 'Accuracy:', accuracy);
         socket.emit('send-location', { latitude, longitude });
     },
         (error) => {
             console.error(error);
         }, {
-        enableHighAccuracy: true,
-        timeout: 5000,
+        enableHighAccuracy: false,
+        timeout: 10000,
         maximumAge: 0,
     });
 }
@@ -22,12 +23,19 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 const markers = {}
 
-socket.on("receive-location", (data) => {
+socket.on("recive-location", (data) => {
     const { id, latitude, longitude } = data;
-    map.setView([latitude, longitude], 16);
+    map.setView([latitude, longitude], 14);
+    if (markers[id]) {
+        markers[id].setLatLng([latitude, longitude]);
+    } else {
+        markers[id] = L.marker([latitude, longitude]).addTo(map);
+    }
+});
+
+socket.on("user-disconnected", (id) => {
     if(markers[id]){
-        markers[id].setLatLng([latitude,longitude]);
-    }else{
-        markers[id] = L.marker([latitude,longitude]).addTo(map);
+        markers[id].removeFrom(map);
+        delete markers[id];
     }
 });

@@ -13,10 +13,14 @@ app.use(express.static('public'));
 
 io.on('connection', function (socket) {
     socket.on('send-location', function(data){
-        io.emit("receive-location", { id: socket.id, ...data }); // Corrected event name here
+        io.emit("recive-location", { id: socket.id, ...data }); 
+        console.log(`'New user connected' ${socket.id}`);
     });
-    console.log('New user connected');
+    socket.on("disconnect", function(){
+        io.emit("user-disconnected", socket.id);
+    })
 });
+
 
 app.get('/', (req, res) => {
     res.render('index');
